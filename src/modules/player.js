@@ -33,7 +33,9 @@ export class Player extends AnimatedSprite {
       this.vel.y = 0;
       this.jumping = false;
     }
+  }
+  draw() {
     this.animate();
-    this.draw();
+    super.draw();
   }
 }

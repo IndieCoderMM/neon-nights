@@ -1,92 +1,85 @@
-import { Player } from './modules/player.js';
-// import { Platform } from './modules/platform.js';
+import Phaser from 'phaser';
+import skyLineImage from './res/background/skyline-a.png';
+import tileImage from './res/tile.png';
+import coraSheet from './res/player/spritesheet.png';
 
-const WIDTH = 800;
-const HEIGHT = 450;
+const SPEED = 150;
+const FPS = 5;
 
-const importImages = (req) => req.keys().map(req);
-
-const idleImages = importImages(
-  require.context('./res/player/idle/', false, /\.png$/)
-);
-const jumpImages = importImages(
-  require.context('./res/player/jump/', false, /\.png$/)
-);
-const runImages = importImages(
-  require.context('./res/player/run/', false, /\.png$/)
-);
-
-const canvas = document.querySelector('canvas');
-const c = canvas.getContext('2d');
-
-canvas.width = WIDTH;
-canvas.height = HEIGHT;
-
-const player = new Player({
-  canvas: c,
-  images: idleImages,
-  x: 10,
-  y: 10,
-  duration: 150,
-});
-
-const keys = {
-  right: {
-    pressed: false,
+var config = {
+  type: Phaser.AUTO,
+  width: 800,
+  height: 450,
+  physics: {
+    default: 'arcade',
+    arcade: {
+      gravity: { y: 300 },
+      debug: false,
+    },
   },
-  left: {
-    pressed: false,
-  },
+  scene: { preload, create, update },
 };
 
-const run = () => {
-  requestAnimationFrame(run);
-  c.fillStyle = 'blue';
-  c.fillRect(0, 0, canvas.width, canvas.height);
-  // platforms.forEach((platform) => {
-  //   platform.draw(c, 'green');
-  // });
-  player.update(canvas.height);
-  if (keys.right.pressed && player.pos.x < canvas.width / 2 - 50) {
-    player.images = runImages;
-    player.vel.x = 5;
-  } else if (keys.left.pressed && player.pos.x > 50) {
-    player.vel.x = -5;
+var game = new Phaser.Game(config);
+var platforms;
+var player;
+var cursors;
+
+function preload() {
+  this.load.image('skyline', skyLineImage);
+  this.load.image('ground', tileImage);
+  this.load.spritesheet('cora', coraSheet, {
+    frameWidth: 142,
+    frameHeight: 134,
+  });
+}
+
+function create() {
+  this.add.image(0, 0, 'skyline').setOrigin(0, 0);
+  platforms = this.physics.add.staticGroup();
+  platforms.create(100, 300, 'ground');
+
+  player = this.physics.add.sprite(100, 100, 'cora');
+  player.setBounce(0.1);
+  player.setCollideWorldBounds(true);
+
+  this.physics.add.collider(player, platforms);
+
+  this.anims.create({
+    key: 'idle',
+    frames: this.anims.generateFrameNumbers('cora', { start: 0, end: 3 }),
+    frameRate: FPS,
+    repeat: -1,
+  });
+  this.anims.create({
+    key: 'run',
+    frames: this.anims.generateFrameNumbers('cora', { start: 4, end: 11 }),
+    frameRate: FPS,
+    repeat: -1,
+  });
+  this.anims.create({
+    key: 'jump',
+    frames: this.anims.generateFrameNumbers('cora', { start: 12, end: 14 }),
+    frameRate: FPS,
+    repeat: -1,
+  });
+
+  cursors = this.input.keyboard.createCursorKeys();
+}
+
+function update() {
+  if (cursors.left.isDown) {
+    player.setVelocityX(-SPEED);
+    player.anims.play('run', true);
+  } else if (cursors.right.isDown) {
+    player.setVelocityX(SPEED);
+    player.anims.play('run', true);
   } else {
-    player.images = idleImages;
-    player.vel.x = 0;
-    // if (keys.right.pressed) {
-    //   platforms.forEach((platform) => {
-    //     platform.pos.x -= 5;
-    //   });
-    // } else if (keys.left.pressed) {
-    //   platforms.forEach((platform) => {
-    //     platform.pos.x += 5;
-    //   });
-    // }
+    player.setVelocityX(0);
+    player.anims.play('idle', true);
   }
-  if (player.jumping) {
-    player.images = jumpImages;
+  if (cursors.up.isDown && player.body.touching.down) {
+    player.setVelocityY(-330);
+    player.anims.play('jump', true);
   }
-};
-
-run();
-
-addEventListener('keydown', ({ key }) => {
-  if (key == 'ArrowLeft' || key == 'a') {
-    keys.left.pressed = true;
-  } else if (key == 'ArrowRight' || key == 'd') {
-    keys.right.pressed = true;
-  } else if (key == 'ArrowUp' || key == 'w') {
-    player.vel.y -= 20;
-    player.jumping = true;
-  }
-});
-
-addEventListener('keyup', ({ key }) => {
-  if (key == 'ArrowLeft' || key == 'a') {
-    keys.left.pressed = false;
-  } else if (key == 'ArrowRight' || key == 'd') {
-    keys.right.pressed = false;
-  }
-});
+}

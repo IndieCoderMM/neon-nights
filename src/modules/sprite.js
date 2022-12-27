@@ -15,13 +15,6 @@ export class Sprite {
     if (!this.ready) return;
     this.canvas.drawImage(this.img, this.pos.x, this.pos.y);
   }
-
-  // draw(context) {
-  // context.fillStyle = color;
-  // context.fillRect(this.pos.x, this.pos.y, this.width, this.height);
-  //   if (!this.ready) return;
-  //   context.drawImage(this.img, this.pos.x, this.pos.y);
-  // }
 }
 
 export class AnimatedSprite extends Sprite {
