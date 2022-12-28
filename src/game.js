@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
-import skyLineImage from './res/background/skyline-a.png';
-import tileImage from './res/tile.png';
+import tileSetImage from './res/map/tileset.png';
+import tiledJson from './res/map/neon-nights-map.json';
 import coraSheet from './res/player/spritesheet.png';
 
 const SPEED = 150;
@@ -14,72 +14,87 @@ var config = {
     default: 'arcade',
     arcade: {
       gravity: { y: 300 },
-      debug: false,
+      debug: true,
     },
   },
   scene: { preload, create, update },
 };
 
 var game = new Phaser.Game(config);
-var platforms;
 var player;
-var cursors;
 
 function preload() {
-  this.load.image('skyline', skyLineImage);
-  this.load.image('ground', tileImage);
+  this.load.image('tiles', tileSetImage);
+  this.load.tilemapTiledJSON('tilemap', tiledJson);
   this.load.spritesheet('cora', coraSheet, {
-    frameWidth: 142,
-    frameHeight: 134,
+    frameWidth: 71,
+    frameHeight: 67,
   });
 }
 
 function create() {
-  this.add.image(0, 0, 'skyline').setOrigin(0, 0);
-  platforms = this.physics.add.staticGroup();
-  platforms.create(100, 300, 'ground');
+  const map = this.make.tilemap({ key: 'tilemap' });
+  const tileset = map.addTilesetImage('tileset', 'tiles');
 
-  player = this.physics.add.sprite(100, 100, 'cora');
+  map.createStaticLayer('Background', tileset);
+  const platforms = map.createStaticLayer('Platform', tileset);
+  map.createStaticLayer('Ladder', tileset);
+
+  platforms.setCollisionByProperty({ collisionBody: true });
+
+  player = this.physics.add.sprite(0, 0, 'cora').setSize(30, 64);
   player.setBounce(0.1);
   player.setCollideWorldBounds(true);
 
   this.physics.add.collider(player, platforms);
 
+  const debugGraphics = this.add.graphics().setAlpha(0.7);
+  platforms.renderDebug(debugGraphics, {
+    tileColor: null,
+    collidingTileColor: new Phaser.Display.Color(244, 244, 45, 50),
+    faceColor: new Phaser.Display.Color(45, 56, 37, 255),
+  });
+
   this.anims.create({
     key: 'idle',
-    frames: this.anims.generateFrameNumbers('cora', { start: 0, end: 3 }),
+    frames: this.anims.generateFrameNumbers('cora', { start: 0, end: 2 }),
     frameRate: FPS,
     repeat: -1,
   });
   this.anims.create({
     key: 'run',
-    frames: this.anims.generateFrameNumbers('cora', { start: 4, end: 11 }),
+    frames: this.anims.generateFrameNumbers('cora', { start: 7, end: 14 }),
     frameRate: FPS,
     repeat: -1,
   });
   this.anims.create({
     key: 'jump',
-    frames: this.anims.generateFrameNumbers('cora', { start: 12, end: 14 }),
+    frames: this.anims.generateFrameNumbers('cora', { start: 3, end: 6 }),
     frameRate: FPS,
     repeat: -1,
   });
-
-  cursors = this.input.keyboard.createCursorKeys();
+  player.faceRight = true;
+  this.cameras.main.startFollow(player, true, 0.05, 0.05);
 }
 
 function update() {
+  const cursors = this.input.keyboard.createCursorKeys();
+
   if (cursors.left.isDown) {
     player.setVelocityX(-SPEED);
     player.anims.play('run', true);
+    player.faceRight = false;
   } else if (cursors.right.isDown) {
     player.setVelocityX(SPEED);
     player.anims.play('run', true);
+    player.faceRight = true;
   } else {
     player.setVelocityX(0);
     player.anims.play('idle', true);
   }
-  if (cursors.up.isDown && player.body.touching.down) {
+  if (cursors.up.isDown) {
     player.setVelocityY(-330);
     player.anims.play('jump', true);
   }
+  player.flipX = !player.faceRight;
 }
