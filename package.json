@@ -12,16 +12,13 @@
     "type": "git",
     "url": "git+https://github.com/IndieCoderMM/neon-nights.git"
   },
-  "keywords": [
-    "phaser",
-    "platformer"
-  ],
+  "keywords": [],
   "author": "IndieCoderMM",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/IndieCoderMM/neon-nights/issues"
   },
-  "homepage": "https://github.com/IndieCoderMM/neon-nights#readme",
+  "homepage": "https://indiecodermm.github.io/neon-nights",
   "devDependencies": {
     "gh-pages": "^5.0.0",
     "html-webpack-plugin": "^5.5.0",
