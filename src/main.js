@@ -18,5 +18,6 @@ const config = {
 };
 
 document.body.style.overflow = 'hidden';
+document.body.style.margin = '0';
 
 export default new Phaser.Game(config);
